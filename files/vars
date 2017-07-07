@@ -1,1 +1,2 @@
-GEM_PATH=$GEM_PATH:$HOME/.gems
+# NOTE This causes issues with prune_bundler
+# GEM_PATH=$GEM_PATH:$HOME/.gems
