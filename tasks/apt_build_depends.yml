@@ -1,39 +1,35 @@
 - name: update apt cache
-  apt: update_cache=yes cache_valid_time=86400
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
   become: true
   changed_when: false
 
 - name: install build depends
-  apt: pkg={{ item }} state=present install_recommends=no
-  with_items:
-    - build-essential
-    - git
-    - libcurl4-openssl-dev
-    - libffi-dev
-    - libreadline-dev
-    - libssl-dev
-    - libxml2-dev
-    - libxslt1-dev
-    - zlib1g-dev
+  apt:
+    pkg: "{{ rbenv_apt_packages }}"
+    state: present
+    install_recommends: no
   become: true
 
 - name: install extra build depends
-  apt: pkg={{ item }} state=present install_recommends=no
-  with_items: '{{ rbenv_extra_depends }}'
+  apt:
+    pkg: "{{ rbenv_extra_depends }}"
+    state: present
+    install_recommends: no
   become: true
 
-- shell: "echo '{{ rbenv.rubies | map(attribute='version') | join(' ') }}' | grep '1.8.7'"
-  ignore_errors: yes
-  register: ruby_version_1_8_7
-  check_mode: no
-  changed_when: false
+- name: Create the list of ruby versions.
+  set_fact:
+    rbenv_ruby_versions: "{{ rbenv_ruby_versions | default([]) }} + {{ [item.version] }}"
+  with_items:
+    - "{{ rbenv.rubies }}"
 
 - name: Install packages required to build Ruby 1.8.7
   apt:
-    name: "{{ item }}"
+    name:
+      - bison
+      - autoconf
+      - subversion
     state: present
-  with_items:
-    - bison
-    - autoconf
-    - subversion
-  when: ruby_version_1_8_7.rc == 0
+  when: "'1.8.7' in rbenv_ruby_versions"
